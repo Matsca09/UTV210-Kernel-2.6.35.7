@@ -532,7 +532,6 @@ static void __init smdkc110_setup_clocks(void)
 #endif
 }
 
-#if defined(CONFIG_TOUCHSCREEN_S3C)
 static struct s3c_ts_mach_info s3c_ts_platform __initdata = {
 	.delay                  = 10000,
 	.presc                  = 49,
@@ -579,7 +578,6 @@ void __init s3c_ts_set_platdata(struct s3c_ts_mach_info *pd)
 		pr_err("no memory for Touchscreen platform data\n");
 	}
 }
-#endif
 
 #if defined(CONFIG_KEYPAD_S3C) || defined(CONFIG_KEYPAD_S3C_MODULE)
 #if defined(CONFIG_KEYPAD_S3C_MSM)
@@ -970,9 +968,35 @@ static struct utvcam_platform_data cam_hm2055_plat = {
 	.is_mipi = 0,
 };
 
+static struct utvcam_platform_data cam_gc0308_plat = {
+	.default_width = 640,
+	.default_height = 480,
+	.pixelformat = V4L2_PIX_FMT_YUYV,
+	.freq = 24000000,
+	.is_mipi = 0,
+};
+
+static struct utvcam_platform_data cam_hi704_plat = {
+	.default_width = 640,
+	.default_height = 480,
+	.pixelformat = V4L2_PIX_FMT_YUYV,
+	.freq = 24000000,
+	.is_mipi = 0,
+};
+
 static struct i2c_board_info cam_hm2055_i2c_info = {
 	I2C_BOARD_INFO("hm2055", 0x48 >> 1),
 	.platform_data = &cam_hm2055_plat,
+};
+
+static struct i2c_board_info cam_gc0308_i2c_info = {
+	I2C_BOARD_INFO("gc0308", 0x42 >> 1),
+	.platform_data = &cam_gc0308_plat,
+};
+
+static struct i2c_board_info cam_hi704_i2c_info = {
+	I2C_BOARD_INFO("hi704", 0x60 >> 1),
+	.platform_data = &cam_hi704_plat,
 };
 
 static struct s3c_platform_camera cam_hm2055 = {
@@ -1005,6 +1029,66 @@ static struct s3c_platform_camera cam_hm2055 = {
 	.cam_power		= utvcam_power_en,
 };
 
+static struct s3c_platform_camera cam_gc0308 = {
+	.id				= CAMERA_PAR_A,
+	.type			= CAM_TYPE_ITU,
+	.fmt			= ITU_601_YCBCR422_8BIT,
+	.order422		= CAM_ORDER422_8BIT_CBYCRY,
+	.pixelformat	= V4L2_PIX_FMT_YUYV,
+	.i2c_busnum		= 1,
+	.info			= &cam_gc0308_i2c_info,
+	.srclk_name		= "mout_mpll",
+	.clk_name		= "sclk_cam1",
+	.clk_rate		= 24000000,
+	.line_length	= 640,
+	.width			= 640,
+	.height			= 480,
+	.window	= {
+		.left		= 0,
+		.top		= 0,
+		.width		= 640,
+		.height		= 480,
+	},
+
+	.inv_pclk		= 0,
+	.inv_vsync		= 1,
+	.inv_href		= 0,
+	.inv_hsync		= 0,
+
+	.initialized	= 0,
+	.cam_power		= utvcam_power_en,
+};
+
+static struct s3c_platform_camera cam_hi704 = {
+	.id				= CAMERA_PAR_A,
+	.type			= CAM_TYPE_ITU,
+	.fmt			= ITU_601_YCBCR422_8BIT,
+	.order422		= CAM_ORDER422_8BIT_YCBYCR,
+	.pixelformat	= V4L2_PIX_FMT_YUYV,
+	.i2c_busnum		= 1,
+	.info			= &cam_hi704_i2c_info,
+	.srclk_name		= "mout_mpll",
+	.clk_name		= "sclk_cam1",
+	.clk_rate		= 24000000,
+	.line_length	= 640,
+	.width			= 640,
+	.height			= 480,
+	.window	= {
+		.left		= 16,
+		.top		= 0,
+		.width		= 624,
+		.height		= 480,
+	},
+
+	.inv_pclk		= 0,
+	.inv_vsync		= 1,
+	.inv_href		= 0,
+	.inv_hsync		= 0,
+
+	.initialized	= 0,
+	.cam_power		= utvcam_power_en,
+};
+
 /* Interface setting */
 static struct s3c_platform_fimc fimc_plat_lsi = {
 	.srclk_name		= "mout_mpll",
@@ -1022,6 +1106,14 @@ static void smdkc110_detect_camera(void) {
         // Himax HM2055
         printk("Selecting 2MP camera...\n");
         fimc_plat_lsi.camera[0] = &cam_hm2055;
+    } else if (!strcmp(g_Camera, "gc0308")) {
+        // Galaxycore GC0308
+        printk("Selecting 0.3MP camera...\n");
+        fimc_plat_lsi.camera[0] = &cam_gc0308;
+    } else if (!strcmp(g_Camera, "hi704")) {
+        // Hynix HI704
+        printk("Selecting 0.3MP camera...\n");
+        fimc_plat_lsi.camera[0] = &cam_hi704;
     } else {
         printk("*** WARNING: cannot determine camera; camera will not work ***");
     }
@@ -1066,6 +1158,10 @@ static struct i2c_board_info i2c_devs1[] __initdata = {
 #endif
 };
 
+static struct i2c_board_info i2c_ft5x0x_ts __initdata = {
+	I2C_BOARD_INFO("ft5x0x_ts", (0x70>>1))
+};
+
 /* I2C2 */
 static struct i2c_board_info i2c_devs2[] __initdata = {
 	{
@@ -1101,18 +1197,10 @@ static void smdkc110_power_off(void)
 	while (1);
 }
 
-#if defined(CONFIG_BATTERY_S3C) || defined(CONFIG_BATTERY_UTV210)
 struct platform_device sec_device_battery = {
-#if defined(CONFIG_BATTERY_S3C)
-	.name   = "sec-fake-battery",
-#elif defined(CONFIG_BATTERY_UTV210)
 	.name   = "utv210-battery",
-#else
-#error "ERROR incorrect battery configuration"
-#endif
 	.id = -1,
 };
-#endif
 
 #ifdef CONFIG_ANDROID_PMEM
 static struct android_pmem_platform_data pmem_gpu1_pdata = {
@@ -1175,9 +1263,6 @@ static struct platform_device *smdkc110_devices[] __initdata = {
 #ifdef CONFIG_VIDEO_MFC50
 	&s3c_device_mfc,
 #endif
-#ifdef CONFIG_TOUCHSCREEN_S3C
-	&s3c_device_ts,
-#endif
 	&s3c_device_keypad,
 #ifdef CONFIG_S5P_ADC
 	&s3c_device_adc,
@@ -1232,9 +1317,7 @@ static struct platform_device *smdkc110_devices[] __initdata = {
 	&s3c_device_rndis,
 #endif
 #endif
-#if defined(CONFIG_BATTERY_S3C) || defined(CONFIG_BATTERY_UTV210)
 	&sec_device_battery,
-#endif
 #ifdef CONFIG_S3C_DEV_HSMMC
 	&s3c_device_hsmmc0,
 #endif
@@ -1268,6 +1351,31 @@ static struct platform_device *smdkc110_devices[] __initdata = {
 	&s3c_device_timer[3],
 #endif
 };
+
+static void smdkc110_detect_pdevs(void) {
+    int ret;
+
+    if (!strcmp(g_Model, "703")) {
+        // Herotab C8/Dropad A8/Haipad M7
+        printk("Selecting capacitive touchscreen...\n");
+
+        if ((ret = i2c_register_board_info(1, &i2c_ft5x0x_ts, 1)) != 0)
+            printk("*** ERROR: cannot register capacitive touchscreen (%d); touch will not work ***\n", ret);
+
+    } else if (!strcmp(g_Model, "7024") || !strcmp(g_Model, "8024")) {
+        // Coby 7024 and Coby 8024.
+        printk("Selecting resistive touchscreen...\n");
+
+        if ((ret = platform_device_register(&s3c_device_ts)) != 0)
+            printk("*** ERROR: cannot register resistive touchscreen (%d); touch will not work ***\n", ret);
+
+        // Use S3C fake battery driver until conflict with the touchscreen is resolved.
+        sec_device_battery.name = "sec-fake-battery";
+
+    } else {
+        printk("*** WARNING: unknwon model; some devices will not work ***\n");
+    }
+}
 
 static void __init smdkc110_map_io(void)
 {
@@ -1374,6 +1482,7 @@ static void __init smdkc110_machine_init(void)
     utv210_init_cfg();
     smdkc110_detect_lcd();
     smdkc110_detect_camera();
+    smdkc110_detect_pdevs();
 
 	s3c_usb_set_serial();
 	platform_add_devices(smdkc110_devices, ARRAY_SIZE(smdkc110_devices));
