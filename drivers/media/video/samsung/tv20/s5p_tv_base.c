@@ -1032,8 +1032,8 @@ static void __exit s5p_tv_exit(void)
 	platform_driver_unregister(&s5p_tv_driver);
 }
 
-late_initcall(s5p_tv_init);
-module_exit(s5p_tv_exit);
+//late_initcall(s5p_tv_init);
+//module_exit(s5p_tv_exit);
 
 MODULE_AUTHOR("SangPil Moon");
 MODULE_DESCRIPTION("SS5PC1XX TVOUT driver");
