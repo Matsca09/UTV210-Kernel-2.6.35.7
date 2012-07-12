@@ -1054,11 +1054,6 @@ static struct i2c_board_info i2c_devs1[] __initdata = {
 		I2C_BOARD_INFO("wm8976", 0x1a),
 	},
 #endif
-#ifdef CONFIG_TOUCHSCREEN_FT5406
-	{
-		I2C_BOARD_INFO("ft5x0x_ts", (0x70>>1)),
-	},
-#endif
 #ifdef CONFIG_VIDEO_TV20
 	{
 		I2C_BOARD_INFO("s5p_ddc", (0x74>>1)),
@@ -1083,6 +1078,9 @@ static struct i2c_board_info i2c_devs2[] __initdata = {
 		I2C_BOARD_INFO("max8698", (0xCC >> 1)),
 		.platform_data = &max8698_pdata,
 #endif
+	},
+	{
+		I2C_BOARD_INFO("ft5x0x_ts", (0x70>>1)),
 	},
 };
 
