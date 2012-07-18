@@ -163,8 +163,8 @@ int s3cfb_backlight_onoff(struct platform_device *pdev, int onoff)
 {
     int err;
 
-    // mg3100: GPH2[4] LCD backlight
-    unsigned int nGPIO = S5PV210_GPH2(4);
+    // Matsca09: Fixing the code with the correct gpio from namko
+    unsigned int nGPIO = 0xCE;
 	err = gpio_request(nGPIO, "backlight-en");
 
 	if (err) {
@@ -177,43 +177,35 @@ int s3cfb_backlight_onoff(struct platform_device *pdev, int onoff)
     else
         gpio_direction_output(nGPIO, 0);
 
-	mdelay(10);
+    mdelay(10);
     gpio_free(nGPIO);
 
-	return 0;
+    return 0;
 }
 
 static int s3cfb_lcd_onoff(struct platform_device *pdev, int onoff)
 {
     int err;
 
-    // namko: Use GPH1[6] and GPH1[7] to control LCD power (including backlight)
-    unsigned int nGPIOs[] = {S5PV210_GPH1(6), S5PV210_GPH1(7)};
+    // Matsca09: Fixing the code with the correct gpio from namko
+    unsigned int nGPIO = 0xCE;
 
-	if ((err = gpio_request(nGPIOs[0], "lcd-backlight-en"))) {
+	if ((err = gpio_request(nGPIO, "lcd-backlight-en"))) {
 		printk(KERN_ERR "failed to request GPH1[6] for lcd control\n");
 		return err;
 	}
 
-	if ((err = gpio_request(nGPIOs[1], "lcd-backlight-en"))) {
-		printk(KERN_ERR "failed to request GPH1[7] for lcd control\n");
-        gpio_free(nGPIOs[0]);
-		return err;
-	}
-
     if (onoff) {
-        gpio_direction_output(nGPIOs[0], 1);
-        gpio_direction_output(nGPIOs[1], 0);
+        gpio_direction_output(nGPIO, 1);
     } else {
-        gpio_direction_output(nGPIOs[0], 0);
-        gpio_direction_output(nGPIOs[1], 1);
+        gpio_direction_output(nGPIO, 0);
     }
 
-	mdelay(20);
-    gpio_free(nGPIOs[1]);
-    gpio_free(nGPIOs[0]);
+    mdelay(20);
+    gpio_free(nGPIO);
+    
 
-	return 0;
+    return 0;
 }
 
 int s3cfb_backlight_on(struct platform_device *pdev)
