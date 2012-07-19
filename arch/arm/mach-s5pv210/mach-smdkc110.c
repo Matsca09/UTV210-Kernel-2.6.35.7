@@ -1146,11 +1146,6 @@ static struct i2c_board_info i2c_devs1[] __initdata = {
 		I2C_BOARD_INFO("wm8976", 0x1a),
 	},
 #endif
-#ifdef CONFIG_VIDEO_TV20
-	{
-		I2C_BOARD_INFO("s5p_ddc", (0x74>>1)),
-	},
-#endif
 #ifdef CONFIG_ACCEL_MMA7660
 	{
 		I2C_BOARD_INFO("mma7660", (0x98>>1)),
@@ -1178,6 +1173,11 @@ static struct i2c_board_info i2c_devs2[] __initdata = {
 	{
 		I2C_BOARD_INFO("ft5x0x_ts", (0x70>>1)),
 	},
+	#ifdef CONFIG_VIDEO_TV20
+	{
+		I2C_BOARD_INFO("s5p_ddc", (0x74>>1)),
+	},
+#endif
 };
 
 #define S5PV210_PS_HOLD_CONTROL_REG (S3C_VA_SYS+0xE81C)
